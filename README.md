@@ -69,7 +69,7 @@ fluttergen
 
 - [x] Complete functionality for scanning, authentication, and storage.
 - [x] Stable logic and UI, **no further changes** planned.
-- [ ] Technical documentation pending (will be completed gradually).
+- [x] Technical documentation pending (will be completed gradually).
 - [ ] **CI/CD** setup in progress.
 
 ---
