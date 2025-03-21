@@ -14,15 +14,18 @@ part 'sign_in_state.dart';
 /// of the authentication process using functional programming principles
 /// with the [Result] type.
 ///
-/// Flow:
-/// 1. Listens to [AuthenticateRequested] event.
-/// 2. Emits [SignInLoading].
-/// 3. Calls the [_authRepository.authenticate()] method.
-/// 4. Emits [SignInSuccess] if authentication succeeds, or
-///    [SignInError] with [AuthFailure] if it fails.
+/// The flow of the sign-in process is as follows:
+/// 1. Listens to the [AuthenticateRequested] event.
+/// 2. Emits the [SignInLoading] state to indicate the authentication is in progress.
+/// 3. Calls the [_authRepository.authenticate()] method to perform the authentication.
+/// 4. Emits [SignInSuccess] if authentication is successful.
+/// 5. Emits [SignInError] with an [AuthFailure] if authentication fails.
+///
+/// This BLoC also handles different types of authentication methods, such as biometrics
+/// and device credentials, and manages the result based on which method is chosen.
 class SignInBloc extends Bloc<SignInEvent, SignInState> {
-  /// Constructs [SignInBloc] with the initial state set to [SignInInitial]
-  /// and registers the event handler for [AuthenticateRequested].
+  /// Constructs [SignInBloc] with the initial state set to [SignInInitial].
+  /// Registers the event handler for [AuthenticateRequested] to initiate authentication.
   SignInBloc(
     super.initialState, {
     required IAuthRepository authRepository,
@@ -35,10 +38,14 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
 
   /// Handles [AuthenticateRequested] events.
   ///
-  /// Emits [SignInLoading], then calls the authentication method.
-  /// Based on the [Result], it emits:
-  /// - [SignInSuccess] on successful authentication.
-  /// - [SignInError] with [AuthFailure] on failure.
+  /// This method starts the authentication process by first emitting the [SignInLoading]
+  /// state to indicate the authentication is ongoing. It then selects the best biometric
+  /// method and proceeds with authentication based on the available methods.
+  /// If the authentication succeeds, it emits [SignInSuccess]. If it fails, it emits
+  /// [SignInError] with an [AuthFailure] or [SignInCancelled] if the user cancels the process.
+  ///
+  /// - If biometric authentication fails or is unavailable, it falls back to using
+  ///   device credentials if available.
   Future<void> _onAuthenticateRequested(
     AuthenticateRequested event,
     Emitter<SignInState> emit,
@@ -51,6 +58,8 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
     );
 
     emit(const SignInLoading());
+
+    // Try biometric authentication
     final biometric = _selectBestBiometric(methods);
     if (biometric != null) {
       final canBioResult = await _authRepository.canAuthenticate(biometric);
@@ -75,6 +84,8 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
         emit(SignInUnavailable(error));
       }
     }
+
+    // Fallback to device credentials if biometric authentication is not available
     await Future<void>.microtask(() {});
     const deviceCredential = AuthMethod.deviceCredential;
     if (methods.contains(deviceCredential)) {
@@ -100,9 +111,17 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
       }
     }
 
+    // No valid method available for authentication
     emit(SignInError(AuthFailure.fromCode('no_method_available')));
   }
 
+  /// Selects the best available biometric authentication method.
+  ///
+  /// It checks the provided list of [methods] and prioritizes stronger biometric
+  /// methods. If [AuthMethod.biometricStrong] is available, it is selected.
+  /// If not, it falls back to [AuthMethod.biometricWeak].
+  ///
+  /// Returns the selected biometric authentication method, or null if none are available.
   AuthMethod? _selectBestBiometric(List<AuthMethod> methods) {
     return switch (methods) {
       final m when m.contains(AuthMethod.biometricStrong) =>

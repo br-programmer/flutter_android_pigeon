@@ -5,13 +5,18 @@ import 'package:qr_biometrics_app/core/core.dart';
 part 'auth_event.dart';
 part 'auth_state.dart';
 
-/// [AuthBloc] manages the global authentication state of the application.
+/// The `AuthBloc` manages the global authentication state of the application.
 ///
-/// It handles session verification, sign-in, and sign-out actions,
-/// emitting corresponding [AuthState] changes to control access and navigation.
+/// It handles authentication events such as session verification, sign-in,
+/// and sign-out actions, and emits the corresponding [AuthState] changes
+/// to control user access and navigation. This bloc ensures that the
+/// application responds appropriately to authentication-related events.
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  /// Constructs [AuthBloc] with an initial [AuthState],
-  /// and registers event handlers for session management.
+  /// Constructs the [AuthBloc] with an initial [AuthState] and registers
+  /// event handlers for session management actions.
+  ///
+  /// - `sessionRepository`: The repository used to manage the session.
+  /// - `delay`: Optional delay before performing actions like checking session state.
   AuthBloc(
     super.initialState, {
     required ISessionRepository sessionRepository,
@@ -24,12 +29,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   final ISessionRepository _sessionRepository;
 
+  /// The delay before performing session-related actions.
   final Duration delay;
 
   /// Handles the [AuthCheckRequested] event.
   ///
-  /// Checks if a session is active via [ISessionRepository] and
-  /// emits [Authenticated] or [Unauthenticated] accordingly.
+  /// This event checks whether the session is active by calling
+  /// `sessionActive()` from the [ISessionRepository]. It emits either
+  /// [Authenticated] or [Unauthenticated] based on the result.
+  ///
+  /// - Emits [AuthLoading] while checking the session.
+  /// - Emits [Authenticated] if the session is active.
+  /// - Emits [Unauthenticated] if the session is not active or there is a failure.
   Future<void> _onAuthCheckRequested(
     AuthCheckRequested event,
     Emitter<AuthState> emit,
@@ -47,8 +58,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   /// Handles the [AuthSignedIn] event.
   ///
-  /// Persists the session and emits [Authenticated] on success,
-  /// otherwise emits [Unauthenticated].
+  /// This event persists the session by calling `saveSession()` on the
+  /// [ISessionRepository] and emits [Authenticated] if successful.
+  /// If the session cannot be saved, it emits [Unauthenticated].
+  ///
+  /// - Emits [Authenticated] if session saving is successful.
+  /// - Emits [Unauthenticated] if saving the session fails.
   Future<void> _onAuthSignedIn(
     AuthSignedIn event,
     Emitter<AuthState> emit,
@@ -63,8 +78,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   /// Handles the [AuthSignedOut] event.
   ///
-  /// Clears the session and always emits [Unauthenticated],
-  /// regardless of the result, to enforce logout.
+  /// This event clears the session and ensures that the application
+  /// always emits [Unauthenticated], regardless of the result of the session
+  /// clearing, to enforce the logout action.
   Future<void> _onAuthSignedOut(
     AuthSignedOut event,
     Emitter<AuthState> emit,

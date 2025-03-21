@@ -12,6 +12,22 @@ import 'package:qr_biometrics_app/core/fp/result.dart';
 sealed class AuthFailure {
   const AuthFailure();
 
+  /// Factory method to create an instance of [AuthFailure] based on a provided [code].
+  ///
+  /// Maps known error codes to their corresponding failure types:
+  /// - `'unavailable'` → [BiometricUnavailable]
+  /// - `'failed'` → [AuthenticationFailed]
+  /// - `'error'` → [AuthenticationError]
+  /// - `'cancelled'` → [AuthenticationCancelled]
+  /// - Any other code → [UnknownAuthFailure]
+  ///
+  /// Example:
+  /// ```dart
+  /// final failure = AuthFailure.fromCode('failed');
+  /// if (failure is AuthenticationFailed) {
+  ///   // Handle the failure appropriately.
+  /// }
+  /// ```
   factory AuthFailure.fromCode(String code) {
     return switch (code) {
       'unavailable' => const BiometricUnavailable(),
@@ -22,22 +38,7 @@ sealed class AuthFailure {
     };
   }
 
-  /// Creates an [AuthFailure] based on a provided string [code].
-  ///
-  /// Maps known error codes to their corresponding failure types:
-  /// - `'unavailable'` → [BiometricUnavailable]
-  /// - `'failed'` → [AuthenticationFailed]
-  /// - `'error'` → [AuthenticationError]
-  /// - Any other code → [UnknownAuthFailure]
-  ///
-  /// Example:
-  /// ```dart
-  /// final failure = AuthFailure.fromCode('failed');
-  /// if (failure is AuthenticationFailed) {
-  ///   // Handle the failure appropriately.
-  /// }
-  /// ```
-  ///
+  /// The error code associated with this authentication failure.
   String get code;
 }
 
@@ -79,6 +80,10 @@ class AuthenticationError extends AuthFailure {
   String get code => 'error';
 }
 
+/// Represents a platform-specific authentication failure.
+///
+/// This failure type holds the underlying error object that caused
+/// the failure, typically used for platform-specific issues.
 class PlatformAuthFailure extends AuthFailure {
   const PlatformAuthFailure({required this.error});
 
@@ -88,6 +93,10 @@ class PlatformAuthFailure extends AuthFailure {
   String get code => 'platform_error';
 }
 
+/// Indicates that the authentication attempt was cancelled.
+///
+/// This failure occurs when the user manually cancels the authentication
+/// process (e.g., closing the biometric prompt).
 class AuthenticationCancelled extends AuthFailure {
   const AuthenticationCancelled();
 
@@ -108,6 +117,11 @@ class UnknownAuthFailure extends AuthFailure {
   String get code => error.toString();
 }
 
+/// Extension providing helper methods for [AuthFailure] instances.
 extension AuthFailureX on AuthFailure {
+  /// Checks if the failure is a cancellation failure.
+  ///
+  /// This method returns `true` if the failure is of type [AuthenticationCancelled],
+  /// indicating that the user canceled the authentication process.
   bool get cancelled => this is AuthenticationCancelled;
 }
