@@ -1,0 +1,5 @@
+{
+    "history": "Scan History",
+    "errorLoadingHistory": "An error occurred while loading the data",
+    "dataEmpty": "You haven't scanned anything yet"
+}
