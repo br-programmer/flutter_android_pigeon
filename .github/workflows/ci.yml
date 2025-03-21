@@ -1,0 +1,57 @@
+name: CI - QR Biometrics App
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.3'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate Pigeon bindings
+        run: |
+          dart run pigeon --input pigeons/session/session_api.dart
+          dart run pigeon --input pigeons/biometrics/biometrics_api.dart
+          dart run pigeon --input pigeons/scanner/qr_scanner_api.dart
+          dart run pigeon --input pigeons/storage/local_storage_api.dart
+
+      - name: Generate translations with slang
+        run: dart run slang
+
+      - name: Generate assets with flutter_gen
+        run: fluttergen
+
+      - name: Run tests with coverage
+        run: |
+          flutter test --coverage
+          lcov --remove coverage/lcov.info \
+            'lib/pigeon/*' \
+            'lib/core/app/*' \
+            'lib/core/navigation/*' \
+            'lib/core/shared/presentation/blocs/app_bloc_observer.dart' \
+            'lib/core/shared/presentation/screens/*' \
+            'lib/core/shared/presentation/widgets/*' \
+            'lib/features/**/presentation/screens/*' \
+            'lib/features/**/presentation/widgets/*' \
+            -o coverage/lcov.info \
+            --ignore-errors unused
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage/lcov.info
+          fail_ci_if_error: true
