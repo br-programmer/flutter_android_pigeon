@@ -7,20 +7,46 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest  # Change to ubuntu-latest if iOS build is not required
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # 🔹 Setup Flutter with cache
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.3'
+          cache: true
 
+      # 🔹 Cache Dart pub dependencies
+      - name: Cache pub dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.pub-cache
+          key: pub-cache-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: pub-cache-${{ runner.os }}-
+
+      # 🔹 Cache fluttergen installation
+      - name: Cache fluttergen
+        uses: actions/cache@v3
+        with:
+          path: ~/.fluttergen
+          key: fluttergen-${{ runner.os }}-v1
+          restore-keys: fluttergen-${{ runner.os }}-
+
+      # 🔹 Install fluttergen
+      - name: Install fluttergen
+        uses: FlutterGen/setup-fluttergen@v1
+        with:
+          version: latest
+
+      # 🔹 Install Flutter dependencies
       - name: Install dependencies
         run: flutter pub get
 
+      # 🔹 Generate Pigeon bindings for platform channels
       - name: Generate Pigeon bindings
         run: |
           dart run pigeon --input pigeons/session/session_api.dart
@@ -28,12 +54,15 @@ jobs:
           dart run pigeon --input pigeons/scanner/qr_scanner_api.dart
           dart run pigeon --input pigeons/storage/local_storage_api.dart
 
+      # 🔹 Generate translations with slang
       - name: Generate translations with slang
         run: dart run slang
 
+      # 🔹 Generate assets with fluttergen
       - name: Generate assets with flutter_gen
         run: fluttergen
 
+      # 🔹 Run tests and collect coverage
       - name: Run tests with coverage
         run: |
           flutter test --coverage
@@ -49,6 +78,7 @@ jobs:
             -o coverage/lcov.info \
             --ignore-errors unused
 
+      # 🔹 Upload coverage report to Codecov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
