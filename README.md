@@ -1,6 +1,6 @@
 # QR Biometrics App
 
-[![codecov](https://codecov.io/gh/br-programmer/flutter_android_pigeon/branch/main/graph/badge.svg?token=VW3GIYMUEU)](https://codecov.io/gh/br-programmer/flutter_android_pigeon)
+[![codecov](https://codecov.io/gh/br-programmer/flutter_android_pigeon/branch/main/graph/badge.svg?style=flat-square)](https://codecov.io/gh/br-programmer/flutter_android_pigeon)
 
 **QR Biometrics App** is a mobile application developed with **Flutter** that allows scanning QR codes, authenticating via biometrics, and storing scans locally using **Room Database** and **encrypted SharedPreferences**. The app supports multiple environments (dev, stg, prod) and multilingual localization with **slang**.
 
