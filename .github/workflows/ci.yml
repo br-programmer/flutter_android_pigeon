@@ -62,6 +62,10 @@ jobs:
       - name: Generate assets with flutter_gen
         run: fluttergen
 
+      # 🔹 Install lcov on macOS
+      - name: Install lcov
+        run: brew install lcov
+      
       # 🔹 Run tests and collect coverage
       - name: Run tests with coverage
         run: |
