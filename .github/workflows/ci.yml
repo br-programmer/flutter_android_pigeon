@@ -40,7 +40,7 @@ jobs:
       - name: Install fluttergen
         uses: FlutterGen/setup-fluttergen@v1
         with:
-          version: latest
+          version: v5.3.1
 
       # 🔹 Install Flutter dependencies
       - name: Install dependencies
